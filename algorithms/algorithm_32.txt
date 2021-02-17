@@ -1,0 +1,1 @@
+{"ICA": false, "Filter": "filter bank", "Window length": 2, "PCA": true, "Penalty": "l1"}

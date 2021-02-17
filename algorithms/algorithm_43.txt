@@ -1,0 +1,1 @@
+{"ICA": true, "Filter": "bandpass", "Window length": 1, "PCA": true, "Penalty": "l2"}

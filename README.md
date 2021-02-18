@@ -88,15 +88,15 @@ Filtering only removes artifacts that have frequency components outside the 0.5-
 
 ICA is implemented with the `FastICA` algorithm from Scikit-learn. For each subject, the independent components (unmixing matrix) are computed and the EEG signals transformed into the independent sources. The components are not ordered in any way, and so the artifacts can appear in any channel, thus identification of artifacts requires manual inspection using https://labeling.ucsd.edu/tutorial/labels . The plot of independent sources for subject 1 is shown below:
 
-![subj1_ica](subj1_ica.png)
+![subj1_ica](images/subj1_ica.png)
 
 Eyeblink artifacts can be seen in channel 31. To reject this artifact, the 31st independent source is zeroed prior to taking the inverse transformation. The removal of eyeblinks using ICA can be seen in channel 1 of subject 1s data:
 
 Original data
-![subj1_w_eyeblink](subj1_w_eyeblink.png)
+![subj1_w_eyeblink](images/subj1_w_eyeblink.png)
 
 Cleaned channel of data
-![subj1_wo_eyeblink](subj1_wo_eyeblink.png)
+![subj1_wo_eyeblink](images/subj1_wo_eyeblink.png)
 
 At this stage, only eyeblink artifacts are removed to prevent the loss of too much useful information.
 

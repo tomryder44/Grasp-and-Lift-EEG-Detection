@@ -51,7 +51,7 @@ The dataset downloaded from Kaggle consists of the EEG recordings for 12 differe
 
 Each sample of EEG data has a corresponding one-hot encoded events vector, with one column for each event. A 1 in a column means the event has occurred within +-150 ms of that sample. The image below shows the first 20 seconds of subject 1s data from channel 1, with the events overlaid. The events overlap, making this a multi-label classificaton problem.
 
-![subj1_channel1_plot](subj1_channel1_plot.png)
+![subject 1 channel 1 EEG plot](images/subj1_channel1_plot.png)
 
 #### Predictions and Evaluation
 The aim is to predict the *probability* of each GAL event happening at each sample, rather than the 1 or 0 class label. The reason for this is that the evaluation metric used in the Kaggle competition is the area under the receiver operating characteristic curve (AUROC), averaged across all the events. The ROC curve plots true positive rate vs false positive rate, for different decision probability thresholds, i.e. the probability at which the decision becomes 1. For example, a classifier with decision probability threshold = 0.1 is going to make far more positive (i.e. 1) decisions than a classifier with decision probability threshold = 0.9, it will be much more sensitive but much less specific. Depending on the application, one is more important than the other. The main advantage of using the AUROC is that predictions can be evaluated without having to decide on the decision probability threshold. Good classifiers will have an AUROC closer to 1, as they can have a large true positive rate whilst maintaining a smaller false positive rate.

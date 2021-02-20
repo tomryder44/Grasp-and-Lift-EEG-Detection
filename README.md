@@ -1,5 +1,5 @@
 # Grasp-and-Lift EEG Detection
-This repository contains the code used for research into the detection of events during grasp-and-lift trials using EEG signals, based on the Grasp-and-Lift EEG Detection Kaggle competition https://www.kaggle.com/c/grasp-and-lift-eeg-detection . This readme outlines the methodology and results. 
+This repository contains the code used for research into the detection of events during grasp-and-lift trials using EEG signals, based on the Grasp-and-Lift EEG Detection Kaggle competition https://www.kaggle.com/c/grasp-and-lift-eeg-detection . This README contains the methodology used and results obtained. 
 
 ## Table of Contents
 [Project Overview](#project-overview) 
@@ -35,7 +35,7 @@ This repository contains the code used for research into the detection of events
 
 ## Project Overview
 #### Task
-The overall aim of this work is to research how different signal processing and machine learning techniques and algorithm parameters impact the detection of the distinct parts of a 'grasp-and-lift' (GAL) using the recorded electroencephalogram (EEG) signals. The motivation behind being able to accurately predict events or intention in EEG data is an improved quality of life for amputees and those with neurological disorders. In the case of GAL detection, feeding the predictions into a robotic prosthesis would return some functionality back to upper-limb amputees. 
+The aim of this work is to research how different signal processing and machine learning techniques and parameters impact the prediction of intent to move a hand in six different ways during a 'grasp-and-lift' (GAL) hand motion, using the recorded electroencephalogram (EEG) signals. Being able to accurately predict intent in EEG data opens up many possibilities of developing healthcare technologies to improve the quality of life of amputees and those with neurological disorders. In the case of predicting the seperate parts of a GAL, the predictions could be fed to a robotic prosthesis, allowing some intuitive control of a hand for upper-limb amputees. 
 
 #### Grasp-and-Lift
 The GAL is defined as 6 distinct events, taking place in the same order, as:
@@ -47,30 +47,36 @@ The GAL is defined as 6 distinct events, taking place in the same order, as:
 6. BothReleased - release the object 
 
 #### The EEG Data
-The dataset downloaded from Kaggle consists of the EEG recordings for 12 different subjects. Each subject has 10 series of recordings, each of which contains 30 GALs. There are 32 channels of EEG data recorded (i.e. 32 sensors). The data was originally sampled at 5 kHz and subsequently downsampled to 500 Hz. Further information about the data acquisition can be found at: https://www.nature.com/articles/sdata201447 .
+The dataset downloaded from Kaggle consists of the EEG recordings for 12 different subjects. Each subject has 10 series of recordings, each of which contains 30 GALs. The data was sampled at 500 Hz, with 32 channels of EEG data being recorded. Further information about the data acquisition can be found at: https://www.nature.com/articles/sdata201447 .
 
-Each sample of EEG data has a corresponding one-hot encoded events vector, with one column for each event. A 1 in a column means the event has occurred within +-150 ms of that sample. The image below shows the first 20 seconds of subject 1s data from channel 1, with the events overlaid. The events overlap, making this a multi-label classificaton problem.
+Each sample of EEG data has a corresponding one-hot encoded events vector, with one column for each type of event. A 1 in a column means the event has occurred within +-150 ms of that sample. The image below shows the first 20 seconds of subject 1's data from channel 1, with the events overlaid. The events overlap, making this a multi-label classificaton problem (can be more than one event at a time).
 
 ![subject 1 channel 1 EEG plot](images/subj1_channel1_plot.png)
 
 #### Predictions and Evaluation
-The aim is to predict the *probability* of each GAL event happening at each sample, rather than the 1 or 0 class label. The reason for this is that the evaluation metric used in the Kaggle competition is the area under the receiver operating characteristic curve (AUROC), averaged across all the events. The ROC curve plots true positive rate vs false positive rate, for different decision probability thresholds, i.e. the probability at which the decision becomes 1. For example, a classifier with decision probability threshold = 0.1 is going to make far more positive (i.e. 1) decisions than a classifier with decision probability threshold = 0.9, it will be much more sensitive but much less specific. Depending on the application, one is more important than the other. The main advantage of using the AUROC is that predictions can be evaluated without having to decide on the decision probability threshold. Good classifiers will have an AUROC closer to 1, as they can have a large true positive rate whilst maintaining a smaller false positive rate.
+The evaluation metric used in the Kaggle competition is the area under the receiver operating characteristic curve (AUROC), averaged across all events. The ROC curve plots true positive rate vs false positive rate for different decision probability thresholds i.e. the probability at which the class decision becomes 1. A classifier with decision probability threshold = 0.1 is going to make far more positive (i.e. 1) decisions than a classifier with decision probability threshold = 0.9, but at the cost of specificity. Using the AUROC allows for evaluation of predictions without having to decide on the decision probability threshold. Therefore, the aim in this work is to predict the *probability* of each GAL event happening at each sample, not the 1 or 0 class label.  
 
 #### Approach
-The top scores on the Kaggle leaderboard for this challenge are AUROCs of 0.97+. These very high-scores are obtained using deep learning model ensembles, i.e. very computationally intensive approaches. This requires the use of a GPU (or GPUs) for realistic training times, and their suitability for real-life real-time application is questionable. Therefore, this work is focused on how preprocessing and feature extraction techniques (less computationally costly processes than classifier optimisation/training) can improve classification. Because I am interested in testing quite a few different techniques and parameters, logistic regression is used as the classifier to keep training times down. 
+AUROC scores of 0.97+ have been obtained on the Kaggle challenge leaderboard, representing models that are almost perfect at distinguishing between the different events. These scores are obtained using deep learning model ensembles, very computationally intensive approaches requiring the use of a GPU (or GPUs) for realistic training times. This work focuses on 
 
-A note on testing: the Kaggle submission restriction of 4 per day prevents testing a large number of different algorithms. For this reason, the testset used is the 7th and 8th series of the training set, for which we have labels to compute the AUROC score.
+ Therefore, this work is focused on how preprocessing and feature extraction techniques (less computationally costly processes than classifier optimisation/training) can improve classification. Because I am interested in testing quite a few different techniques and parameters, logistic regression is used as the classifier to keep training times down. 
+
+A note on testing: the Kaggle submission restriction of 4 per day prevents testing a large number of different algorithms. For this reason, the test set used is the 7th and 8th series of the training data, for which the events are available to compute the AUROC score.
 
 ## Preprocessing
 
 #### Time-Domain Filtering
-The frequency components of the EEG signals change depending on the type of brain activity. Rhythms, frequency ranges corresponding to frequencies exhibited in EEG signals during different types of activity, are typically defined as delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), beta (13-30 Hz) and gamma (30-80 Hz). Because the signals have frequency components up to 250 Hz (500 Hz sampling frequency), the first step therefore is to remove frequency components outside this useful range by bandpass filtering the signals between 0.5-80 Hz. As evidenced in filter_testing.ipynb, mains interference at 50 Hz has already been removed. 
+The main frequencies of the EEG signals change depending on the type of brain activity. Rhythms, frequency ranges corresponding to frequencies exhibited in EEG signals during different types of activity, are typically defined as delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), beta (13-30 Hz) and gamma (30-80 Hz). Broadly speaking, the lower frequency delta and theta bands correspond to sleep, whilst the higher frequency alpha, beta and gamma bands are exhibited during wakefullness. 
+
+As per Nyquist sampling theory, the signals contain frequencies up to 250 Hz. The first step therefore is to remove frequency components outside the useful 0.5-80 Hz range with a bandpass filter.   
 
 ##### Filter Implementation
-The signals are filtered causally, using only the present and past samples as to prevent data leakage (a BCI in real-life doesn't have access to future data). A problem with causal filters is that they introduce a time delay to the filtered signals (see filter testing.ipynb for an example). This is an issue for supervised learning where each sample has a corresponding label at the same time. In general, the larger the order of the filter the larger the time delay, and the larger this issue. With this in mind, whilst FIR filters are desirable to use with EEG signals because they have a linear phase, thus the time-domain signal is not distorted within the passband frequencies, they are genereally higher order than IIR filters, and so suffer from a greater time delay. This is illustrated in the filter_testing.ipynb notebook. For this reason, 4th order IIR filters are used. A 4th order Butterworth IIR filter is implemented using SciPy with the `butter` functon to obtain the filter coefficients. `lfilter` is then used to causally filter the signals.  
+The signals are filtered causally (using only present and past samples) to prevent data leakage, given that a BCI in real-life doesn't have access to future data. An inherent problem with causal filtering is that it introduces a time delay to the filtered signals (see filter_testing.ipynb for an example). This is an issue for supervised learning where each sample has a corresponding label at the same time. 
+
+In general, FIR filters are desirable to use with EEG signals because they have a linear phase, thus the time-domain signal is not distorted within the passband frequencies. However, it was found experimentally too high an order FIR filter is required for suppression of unwanted frequencies, resulting in a large time delay, shown in filter_testing.ipynb. Therefore, to have a minimal time delay, 4th order IIR Butterworth filters are used. Filter coefficients are obtained using the SciPy `butter` functon and the signals causally filtered using `lfilter`.
 
 #### Decimation
-To reduce the computational costs of model training, the signals are downsampled. Because downsampling lowers the sampling rate, low-pass filtering is necessary to prevent aliasing from higher frequency components (above half the new sampling rate). As above, the signals are low-pass filtered with a cutoff frequency of 80 Hz. As per Nyquist sampling theorem, the sampling frequency must therefore be at least 160 Hz to avoid aliasing. This allows for downsampling by taking every 3rd sample (500/160=3.125), resulting in a new sampling frequency of 166.6 Hz.
+To reduce the computational costs of feature extraction and model training, the signals are downsampled. Because downsampling effectively lowers the sampling rate, low-pass filtering is necessary to prevent aliasing from higher frequency components above half the new sampling rate. As above, the signals are bandpass filtered with a higher frequency cutoff of 80 Hz. The sampling frequency must therefore be at least 160 Hz to avoid aliasing. This allows for downsampling by taking every 3rd sample (500/160=3.125), resulting in a new sampling frequency of 166.6 Hz.
 
 #### Filter Bank
 The use of a filter bank is tested; a set of five bandpass filters with cutoff frequencies corresponding to the brain rhythms defined previously. The idea behind this is . The use of the filter bank results in 160 channels of EEG data (5 frequency bands for 32 channels).
@@ -81,7 +87,7 @@ EEG signals are contaminated with *artifacts*; signals not produced by brain act
 Common artifacts found in EEG signals arise from both physiological/internal (e.g. blinking (EOG), heart beat (ECG), muscle activity (EMG) and breathing) and non-physiological/external (e.g. mains interference, cable movement) sources. To improve classification performance, these artifacts should be removed. Ideally, all artifacts would be removed, leaving only the signals produced directly from brain activity. One must take care however as the removal of artifacts inadvertently results in the loss of useful EEG information. 
 
 ##### Filtering
-With the signal filtering described above, high frequency (>80 Hz) noise e.g EMG signals, low frequency (< 0.5Hz) movement artifacts (e.g. breathing) and DC offset are all removed. 
+With the signal filtering described above, high frequency (>80 Hz) noise e.g EMG signals, low frequency (< 0.5Hz) movement artifacts (e.g. breathing) and DC offset are all removed. As evidenced in filter_testing.ipynb, mains interference at 50 Hz has already been removed.
 
 ##### Independent Component Analysis 
 Filtering only removes artifacts that have frequency components outside the 0.5-80 Hz range, so another technique is required to remove remaining artifacts. Independent component analysis (ICA) is a technique that can decompose the 32 channels of EEG data into 32 statistically independent sources, from which the artifacts can be indentified and rejected. 
@@ -211,6 +217,10 @@ Note that all three metrics - training time, number of features and the AUROC sc
 | True  | bandpass    |            2    | False | l1        |        2.948 |     118.875 |   0.6   |
 
 Total run time: ~ 1 day with i5-8250U processor, 4x1.60GHz Cores, 16 GB RAM
+
+Below shows the ROC curve for the best algorithm for subjects 1 and 2. 
+![subj1_roc](images/subj1_roc.png)
+![subj2_roc](images/subj2_roc.png)
 
 ## Discussion
 - **Artifact removal**: Using ICA to remove eyeblink artifacts lowers the AUROC across all algorithms. This is unexpected, given that a more cautious approach was taken with ICA to remove only eyeblink artifacts, given thir distinctive appearance, to prevent misidentification of artifacts and lose useful information. One possible reason is that eye activity actually contains useful class-discriminant information e.g. where the subject is looking. Subject-variability - 

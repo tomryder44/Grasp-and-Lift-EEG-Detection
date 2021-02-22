@@ -93,11 +93,7 @@ ICA is implemented with the `FastICA` algorithm from Scikit-learn. For each subj
 
 Eyeblink artifacts can be seen in channel 31. To reject this artifact, the 31st independent source is zeroed prior to taking the inverse transformation. The removal of eyeblinks using ICA can be seen in channel 1 of subject 1s data:
 
-Original data
-![subj1_w_eyeblink](images/subj1_w_eyeblink.png)
-
-Cleaned channel of data
-![subj1_wo_eyeblink](images/subj1_wo_eyeblink.png)
+![subj1_w_eyeblink](images/subj1_eyeblink.png)
 
 At this stage, only eyeblink artifacts are removed to prevent the loss of too much useful information.
 

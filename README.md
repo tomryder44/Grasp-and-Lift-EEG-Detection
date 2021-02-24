@@ -66,7 +66,10 @@ A note on testing: the Kaggle submission restriction of 4 per day prevents testi
 Raw EEG signals contain noise that reduces the quality of extracted features and in turn classification performance. The EEG signals are therefore processed in an attempt to maximise signal-to-noise ratio. 
 
 #### Time-Domain Filtering
-The main frequencies of the EEG signals change depending on the type of brain activity. Brain rhythms are frequency ranges corresponding to EEG signal frequencies exhibited during different types of activity. They are typically defined as delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), beta (13-30 Hz) and gamma (30-80 Hz). Broadly speaking, the lower frequency delta and theta bands correspond to sleep and relaxation states, whilst the higher frequency alpha, beta and gamma bands are exhibited during times of wakefullness. With the 500 Hz sampling frequency, the EEG signals contain frequencies up to 250 Hz. To keep only the frequencies within these defined rhythms, the EEG signals are bandpass filtered between 0.5-80 Hz. The EEG data of subject 1 channel 1, filtered into the different rhythms is shown below. 
+The main frequencies of the EEG signals change depending on the type of brain activity. Brain rhythms are frequency ranges corresponding to EEG signal frequencies exhibited during different types of activity. They are typically defined as delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), beta (13-30 Hz) and gamma (30-80 Hz). Broadly speaking, the lower frequency delta and theta bands correspond to sleep and relaxation states, whilst the higher frequency alpha, beta and gamma bands are exhibited during times of wakefullness. It would make sense therefore, to keep only the alpha, beta and gamma rhythms. It was found experimentally however that there is useful information at lower frequencies that improves predictions. 
+
+
+With the 500 Hz sampling frequency, the EEG signals contain frequencies up to 250 Hz. To keep only the frequencies within these defined rhythms, the EEG signals are bandpass filtered between 0.5-80 Hz. The EEG data of subject 1 channel 1, filtered into the different rhythms is shown below. 
 
 ![subject 1 channel 1 rhythms](images/subj1_rhythms.png) 
 
@@ -77,51 +80,49 @@ The signals are filtered causally, i.e. using only present and past samples, to 
 To reduce the computational costs of feature extraction and model training, the signals are downsampled. Because downsampling effectively lowers the sampling rate, low-pass filtering is necessary to remove higher frequency components (above half the new sampling rate) that would cause aliasing. As above, the signals are bandpass filtered with a higher frequency cutoff of 80 Hz. The sampling frequency must therefore be at least 160 Hz to avoid aliasing. This allows for downsampling by taking every 3rd sample (500/160=3.125), resulting in a new sampling frequency of 166.6 Hz.
 
 #### Artifact Removal
-EEG signals are contaminated with *artifacts*; signals not produced by brain activity but picked up in the EEG recordings. These artifacts often have a greater amplitude than the signals generated in the brain and thus can obscure the actual brain activity, in turn making the classification more difficult. 
+EEG signals are contaminated with artifacts, signals not produced by brain activity but picked up in the EEG recordings. These artifacts often have a greater amplitude than the signals generated in the brain and can therefore obscure the actual brain activity. Common artifacts found in EEG signals arise from both physiological/internal (e.g. blinking (EOG), heart beat (ECG), muscle activity (EMG) and breathing) and non-physiological/external (e.g. mains interference, cable movement) sources. 
 
-Common artifacts found in EEG signals arise from both physiological/internal (e.g. blinking (EOG), heart beat (ECG), muscle activity (EMG) and breathing) and non-physiological/external (e.g. mains interference, cable movement) sources. To improve classification performance, these artifacts should be removed. Ideally, all artifacts would be removed, leaving only the signals produced directly from brain activity. One must take care however as the removal of artifacts inadvertently results in the loss of useful EEG information. 
+To best classify EEG signals, the artifacts should be removed, leaving only the signals produced directly from brain activity. In reality, perfect separation between artifact and brain activity from EEG signals is not possible, and so removal of artifacts from EEG signals inadvertently results in the loss of useful EEG information. 
 
 ##### Filtering
-With the signal filtering described above, high frequency (>80 Hz) noise e.g EMG signals, low frequency (< 0.5Hz) movement artifacts (e.g. breathing) and DC offset are all removed. As evidenced in filter_testing.ipynb, mains interference at 50 Hz has already been removed.
+Bandpass filtering the signals removes artifacts outside the 0.5-80 Hz range. This includes DC offset, very low frequency artifacts such as breathing, and EMG signals above 80 Hz. As shown in filter_testing.ipynb, mains interference at 50 Hz has already been removed.
 
-##### Independent Component Analysis 
-Filtering only removes artifacts that have frequency components outside the 0.5-80 Hz range, so another technique is required to remove remaining artifacts. Independent component analysis (ICA) is a technique that can decompose the 32 channels of EEG data into 32 statistically independent sources, from which the artifacts can be indentified and rejected. 
+##### Independent Component Analysis
+Another artifact removal technique is necessary to remove those present in the 0.5-80 Hz range. Independent component analysis (ICA) is one such technique commonly used to remove artifacts from EEG signals. ICA decomposes the 32 channels of EEG data into 32 maximally independent signals/sources, which can isolate artifacts hidden in the EEG data, allowing for their removal. 
 
-ICA is implemented with the `FastICA` algorithm from Scikit-learn. For each subject, the independent components (unmixing matrix) are computed and the EEG signals transformed into the independent sources. The components are not ordered in any way, and so the artifacts can appear in any channel, thus identification of artifacts requires manual inspection using https://labeling.ucsd.edu/tutorial/labels . The plot of independent sources for subject 1 is shown below:
+ICA is implemented with the `FastICA` algorithm in scikit-learn. For each subject, an unmixing matrix is computed to transform the EEG signals into the independent sources. The sources are not ordered in any way, so identification of artifacts requires manual (or automated) inspection. In this work, the sources are presented in runtime, for example the sources of subject 1 are:
 
 ![subj1_ica](images/subj1_ica.png)
 
-Eyeblink artifacts can be seen in the source 4th from the bottom. To reject this artifact, the 28th column of independent sources is zeroed prior to taking the inverse transformation. The removal of eyeblinks using ICA can be seen in channel 1 of subject 1s data:
+Using a guide such as https://labeling.ucsd.edu/tutorial/labels , any artifacts can be identified. For example, eyeblink artifacts can be seen in the source 4th from the bottom, with their distinctive large peaks. To reject these eyeblinks, the 28th channel of independent sources is set to zero. When the inverse transformation is applied back to the mixed EEG signals, the eyeblinks are removed, as shown below:
 
 ![subj1_w_eyeblink](images/subj1_eyeblink.png)
 
-At this stage, only eyeblink artifacts are removed to prevent the loss of too much useful information.
-
 #### Filter Bank
-The use of a filter bank is investigated. The EEG signals are passed through five bandpass filters with cutoff frequencies corresponding to the brain rhythms defined above, and concatenated column-wise. This increases dimensionality of the data from 32 channels to 160. The idea behind using a filter bank is that 
+The use of a filter bank is investigated. The EEG signals are passed through five bandpass filters with cutoff frequencies corresponding to the brain rhythms defined above, and concatenated column-wise. This increases dimensionality of the data from 32 channels to 160. The idea behind using a filter bank like this is that because features are extracted from specific rhythms rather than the entire frequency spectrum, there is more discriminatory information about the different events available.  
 
 ## Feature Extraction
-Features are extracted from the EEG signals for two main reasons: (1) extract useful information whilst removing noise to improve classification performance and (2) to reduce the amount of data and therefore computational costs.
+Features are extracted from the EEG signals that aim to capture the important, event-discriminatory, information. This allows for reduction in the size of the data set without the loss of information, resulting in shorter training times and potentially better classification performance. 
 
 #### Epoching
-The signals are split into segments of data known as epochs, from which a set of features are extracted. A sliding window is used to pass through the data, extracting features as it goes. The length of the window, dictating how much previous information is useful for predictions at the current time, is an important parameter affecting classification performance. Therefore, windows of 0.25, 0.5, 1 and 2 seconds are tested, all with 50% overlap. The set of features extracted from a window take the label of the the final sample in that window.
+The signals are split into segments of data known as epochs, from which a set of features are extracted. A sliding window is used to pass through the data, extracting features as it goes. The length of the window, dictating how much previous information is useful for predictions, is an important parameter affecting classification performance. Window lengths of 0.25, 0.5, 1 and 2 seconds are tested, all with 50% overlap. The set of features extracted from a window take the events label of the final sample in that window.
 
 #### Time-Domain Features
-The first type of feature extracted from each epoch are temporal features, describing the signals amplitude over time. For each epoch, simple statistical properties (maximum, minimum and mean absolute value) and Hjorth parameters (activity, mobility, complexity) are extracted. 
+The first type of feature extracted from each epoch are temporal features, describing the EEG signal amplitude over time. Simple statistical properties - maximum, minimum and mean absolute value, and Hjorth parameters - activity, mobility, complexity, are computed. 
 
 #### Frequency-Domain Features
-Spectral features are also extracted from the frequency-domain of the signals. For each epoch, the power spectral density (PSD) estimate, describing the power of the signal at different frequencies, is computed. Welch's PSD estimate reduces the variance of the estimate over a simple periodogram and the use of a window function reduces spectral leakage. Welch's PSD estimate is computed with SciPy's `welch` function, with 50% overlap between segments and a Hann window function. From the PSD of each epoch, the maximum power and the frequency at which maximum power occurs are extracted, as well as the average power across each quarter of the PSD (average across each quarter used rather than the PSD itself to reduce number of features). 
+Spectral features are also extracted from the signals. For each epoch the power spectral density (PSD) estimate, describing the power of the signal at different frequencies, is computed. Welch's PSD estimate computes the modified (window function to reduce spectral leakage) periodogram across overlapping segments of the EEG signals, reducing the variance of the estimate over the periodogram and Bartlett's method (non-overlapping segments). Welch's PSD estimate is computed with SciPy's `welch` function, with 50% overlap between segments and a Hann window function. The maximum power and the frequency at which maximum power occurs are extracted from each PSD, in addition to the average power across each quarter of the PSD (average across each quarter used rather than the PSD itself to reduce number of features). 
 
 #### Principal Component Analysis
-Extraction of multiple features from multiple channels of EEG data results in a highly dimensional feature space, inevitably containing redundant features that can worsen classification performance and increase training times. It can therefore be useful to reduce the dimensonality of the feature space by removing the redundant information and keeping the useful information. 
+Extraction of multiple features from multiple channels of EEG data results in a highly dimensional feature space, inevitably containing redundant features that can worsen classification performance and increase training times. It can therefore be useful to reduce the dimensonality of the feature space by keeping the useful information whilst throwing out the redundant information. 
 
-Principal component analysis (PCA) is one such technique used for dimensionality reduction. With the assumption that variance in the dataset is important, PCA finds the orthonormal vectors, known as components, that describe the greatest variance in the feature space. The data is transformed using the components, and dimensionality reduced by selecting a subset of feature that explain a large amount of the variance. PCA is implemented with Scikit-learn, and the number of features kept was set as `n_components=0.95`, using the number of components that cumulatively explain 95% of the variance in the feature space. PCA is applied after normalisation as it is sensitive to feature scales. 
+Principal component analysis (PCA) is one such technique used for dimensionality reduction. The idea behind PCA is that large variances in the features space are important and should be kept, while correlations can be removed. PCA computes a set of principal components (PCs); orthonormal vectors with maximal variance in the feature space, each one describing less variance that the one before. The PCs then transform the feature space into a new space of uncorrelated variables. Because the PCs are ordered by the amount of variance they explain, those PCs explaining little variance in the feature space can be dropped, reducing dimensionality. PCA is implemented with Scikit-learn, and the number of features kept is set as `n_components=0.95`, using the number of components that cumulatively explain 95% of the variance in the feature space. PCA is applied after normalisation as it is sensitive to scale of features. 
 
 ## Classification
 Logistic regression, a binary classifier, is extended to multiclass and multilabel classification by constructing a *one-vs-rest* classifier, in which a logistic regression model is trained for each class, where the remaining 5 classes are considered the other class. For example, a model is trained to predict *HandStart* or *not HandStart*, and another is trained to predict *FirstDigitTouch* or *not FirstDigitTouch*. This is implemented in scikit-learn with the `OneVsRestClassifier` wrapper that contains the 6 models. 
 
 #### Subject-Specific Models
-The characteristics of the EEG signals in both time and frequency domain vary between different subjects. Therefore, a classifier trained on one subjects features won't perform well on another subjects features. For this reason, a one-vs-rest classifier is trained for each subject, resulting in 12 classifiers per algorithm. On a side note, subject-independent models have been successful using deep-learning approaches, where using data from different subjects serves as a type of regularisation. For real-life use, this would have the advantage of reducing or foregoing a calibration period for a user. 
+The characteristics of the EEG signals in both time and frequency domain vary between different subjects. Therefore, a classifier trained on one subject's features won't perform well on another subject's features. For this reason, a one-vs-rest classifier is trained for **each** subject, resulting in 12 classifiers per algorithm. On a side note, subject-independent models have been successful using deep-learning approaches, where using data from different subjects serves as a type of regularisation. For real-life use, this would have the advantage of reducing or foregoing a calibration period for a user. 
 
 #### Regularisation
 When the coefficients of a logistic regression model get too large, the model becomes too complex and can't generalise well to unseen data, an issue known as overfitting. Regularisation is used to reduce overfitting during training by penalising large weight values through the use of a penalty term added to the loss function. Both L1 and L2 regularisation are used:
@@ -217,24 +218,22 @@ Below shows the ROC curve for the best algorithm for subjects 1 and 2.
 ![subj2_roc](images/subj2_roc.png)
 
 ## Discussion
-- **Artifact removal**: Using ICA to remove eyeblink artifacts lowers the AUROC across all algorithms. This is unexpected, given that a more cautious approach was taken with ICA to remove only eyeblink artifacts, given thir distinctive appearance, to prevent misidentification of artifacts and lose useful information. One possible reason is that eye activity actually contains useful class-discriminant information e.g. where the subject is looking. Subject-variability - 
-- **Signal filtering**: Filtering the signals into the seperate brain rhythms improves performance for the longer windows of 1 and 2 seconds, but not for the windows of 0.25 and 0.5 seconds. One potential explanation for this is that 
-- **Window length**: Window lengths of 0.25, 0.5 and 1 second all perform well. A window length of 2 seconds results in a significant drop in performance, with all the algorithms using a window length of 2 at the bottom of the table. This makes sense, 
-- **Dimensionality reduction with PCA**: Algorithms using PCA see a decrease in AUROC, perhaps expected given the inherent loss of information. However, the reduction in number of features and in turn training time is significant. Furthermore, the use of PCA appears to work better when combined with a filter bank approach, in which many more features are created. 
-- **Regularisation**: Algorithms using L2 regularisation perform better than their L1 counterpart. This could be because L1 regularisation prioritises a sparse solution, completely zeroing out coefficients. In contrast, L2 regularisation will shrink the coefficients of less useful features, but the features are still used, perhaps boosting performance slightly. Training time is increased with L1 regularisation, . It can be seen L1 regularisation does not reduce dimensionality as much as PCA, and there is no clear best feature selection technique. 
+- **Artifact removal**: Using ICA for artifact removal lowers the AUROC across all algorithms. For these results, only eyeblink artifacts were removed to prevent artifact misidentification and loss of useful information. One possible explanation is that the activity in the independent source containing blink artifacts contains useful, event-discriminant information. The artifacts are removed by setting the source to zero, but perhaps a thresholding technique is required to just remove the large spikes. 
+- **Signal filtering**: Filtering the signals into the seperate brain rhythms improves performance for the longer windows of 1 and 2 seconds, but not for the windows of 0.25 and 0.5 seconds. One potential explanation for this is that the quality of the PSD estimate improves with longer windows, resulting in more useful features.
+- **Window length**: Window lengths of 0.25, 0.5 and 1 second all perform well. A window length of 2 seconds results in a significant drop in performance, with all the algorithms using a window length of 2 at the bottom of the table. A logical explanation for this is that data from 2 seconds before a GAL event contains no/little useful information.  
+- **Dimensionality reduction with PCA**: Algorithms using PCA see a decrease in AUROC, perhaps expected given the inherent loss of information. However, the reduction in number of features and in turn training time is significant. It can be seen PCA reduces dimensionality more than L1 regularisation. 
+- **Regularisation**: Algorithms using L2 regularisation perform better than their L1 counterpart. L1 regularisation prioritises a sparse solution, completely zeroing out coefficients. In contrast, L2 regularisation will shrink the coefficients of less useful features, but the features are still used, perhaps resulting in a slightly better AUROC. 
  
 #### Future Work:
 - General:
   - Use best algorithm on Kaggle test set and upload 
   - More in-depth statistical analysis of results
   - Algorithm comparison tool
- 
 - Independent component analysis:
   - More extensive artifact removal 
   - Automated the artifact identification process
-- Preprocessing:
+- Filtering:
   - Frequency sub-bands for the filter bank
-  - Automated artifact detection on the independent sources in ICA
 - Feature Extraction:
   - Time-frequency domain features 
   - Covariance matrix as a feature 
@@ -242,4 +241,4 @@ Below shows the ROC curve for the best algorithm for subjects 1 and 2.
 - Classification 
   - Test different types of models (does the best algorithm for logistic regression translate to other models?)
   - Ensemble of classifiers
-  - Postprocessing of model outputs to take into account previous model outputs e.g. hidden Markov model forward algorithm
+  - Postprocessing of model outputs

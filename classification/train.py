@@ -4,6 +4,8 @@ from sklearn.metrics import roc_auc_score
 import time
   
 def grid_search(x_train, x_val, y_train, y_val, model, grid):
+    ''' Performs a grid search to find optimal value of C for logistic regression.
+    To speed up, if AUROC doesn't increase after 2 iterations, grid search ends. '''
     best_auroc = 0
     not_better_count = 0
     for c in grid:

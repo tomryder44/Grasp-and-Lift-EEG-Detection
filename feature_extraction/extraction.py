@@ -44,7 +44,7 @@ def compute_features(x):
                         psd_q4_mean), axis=1) 
     return feature_row
     
-def feature_space(x, win_length_s, overlap=0.5, y=None):
+def feature_space(x, y, win_length_s, overlap=0.5):
     ''' Pass sliding window over x and extract features. If y (labels) is specified, 
     label of each window given as label of last sample in that window. '''
     
@@ -62,7 +62,7 @@ def feature_space(x, win_length_s, overlap=0.5, y=None):
     
     for i in range(start, len(x), step):
         
-        if y is not None:
+        if y is not None: # todo - for test data with no y
             window_labels.append(y[i,:]) # label given as label of last sample in window
         
         # get window of data and extract features

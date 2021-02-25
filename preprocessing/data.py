@@ -2,9 +2,6 @@
 import pandas as pd
 import numpy as np
 
-from preprocessing.filter import downsample, causal_IIR_filter
-from preprocessing.artifact_removal import independent_component_analysis
-
 def load_subject_data(subject, filetype, start_series, end_series):
     ''' Loads the data or events specified as filetype for a subject. The series
     are specified to build a training and testing sets. '''
@@ -49,24 +46,4 @@ def get_data(subject, for_kaggle=False):
         y_val = load_subject_data(subject, 'events', 5, 6)
         y_test = load_subject_data(subject, 'events',  7, 8)
         return x_train, x_val, x_test, y_train, y_val, y_test
-        
-def preprocess(x_train, x_val, x_test, y_train, y_val, y_test, ICA=False):
-    '''  Preprocesses the train and test with filtering, downsampling and ICA. '''
-    
-    x_train = causal_IIR_filter(x_train, [0.5, 80])
-    x_val = causal_IIR_filter(x_val, [0.5, 80])
-    x_test = causal_IIR_filter(x_test, [0.5, 80])
-    
-    x_train = downsample(x_train)
-    x_val = downsample(x_val)
-    x_test = downsample(x_test)
-    y_train = downsample(y_train)
-    y_val = downsample(y_val)
-    y_test = downsample(y_test)
-
-    if ICA:
-        x_train, ica, col = independent_component_analysis(x_train)
-        x_val = independent_component_analysis(x_val, ica, col)
-        x_test = independent_component_analysis(x_test, ica, col)
-    
-    return x_train, x_val, x_test, y_train, y_val, y_test
+   

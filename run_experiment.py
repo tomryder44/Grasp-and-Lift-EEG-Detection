@@ -3,10 +3,16 @@ import time
 import datetime
 import pandas as pd
 import numpy as np
-from classification.gal_classification import optimise_model
-from preprocessing.gal_preprocessing import get_data, preprocess
-from feature_extraction.gal_feature_extraction import compute_feature_space
-from preprocessing.gal_filtering import filter_bank
+
+from preprocessing.data import get_data
+from preprocessing.filter import downsample, decimate, filter_bank
+from preprocessing.artifact_removal import independent_component_analysis
+
+from feature_extraction.extraction import feature_space, normalise
+from feature_extraction.dim_reduction import principal_component_analysis
+
+from classification.train import optimise_model
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 from tabulate import tabulate
@@ -14,8 +20,8 @@ from sklearn.metrics import roc_auc_score
 import json
 
 # set subjects, algorithms and grid in test
-subjects = range(1, 13)
-algorithms = range(1, 65)
+subjects = range(1, 2) # (1, 13)
+algorithms = range(1, 2) # (1, 65)
 grid = np.logspace(-1.3, 1.3, 10)
 
 # algorithm results dataframe
@@ -27,25 +33,28 @@ t.index.rename('algorithm', inplace=True)
 # preprocessing carried out on all datasets seperately so that ICA and
 # subsequent visual inspection can be done at one time
 
-# load and preprocess datasets without ICA
 subject_datasets = []
+subject_datasets_ica = []
 for subject in subjects:
+    
     x_train, x_val, x_test, y_train, y_val, y_test = get_data(subject)
-    x_train, x_val, x_test, y_train, y_val, y_test = preprocess(
-                                                        x_train, x_val, x_test,
-                                                        y_train, y_val, y_test, 
-                                                        ICA=False)
+    
+    x_train = decimate(x_train)
+    x_val = decimate(x_val)
+    x_test = decimate(x_test)
+    
+    y_train = downsample(y_train)
+    y_val = downsample(y_val)
+    y_test = downsample(y_test)
+    
     subject_datasets.append((x_train, x_val, x_test, y_train, y_val, y_test))
     
-# load and preprocess datasets with ICA 
-# subject_datasets_ica = []
-# for subject in subjects:
-#     x_train, x_val, x_test, y_train, y_val, y_test = get_data(subject)
-#     x_train, x_val, x_test, y_train, y_val, y_test = preprocess(
-#                                                         x_train, x_val, x_test,
-#                                                         y_train, y_val, y_test, 
-#                                                         ICA=True)
-#     subject_datasets_ica.append((x_train, x_val, x_test, y_train, y_val, y_test))    
+    x_train_ica, ica, col = independent_component_analysis(x_train)
+    x_val_ica = independent_component_analysis(x_val, ica, col)
+    x_test_ica = independent_component_analysis(x_test, ica, col)
+    
+    subject_datasets_ica.append((x_train_ica, x_val_ica, x_test_ica, 
+                                 y_train, y_val, y_test))
 
 # record overall run time
 start_time = time.time()
@@ -92,11 +101,20 @@ for algorithm in algorithms:
             x_val = filter_bank(x_val)
             x_test = filter_bank(x_test)
     
-        # feature extraction           
-        x_train, x_val, x_test, y_train, y_val, y_test = compute_feature_space(
-                                                        x_train, x_val, x_test, 
-                                                        y_train, y_val, y_test,
-                                                        win_length, PCA)
+        # feature extraction  
+        x_train, y_train = feature_space(x_train, y_train, win_length)
+        x_val, y_val = feature_space(x_val, y_val, win_length)
+        x_test, y_test = feature_space(x_test, y_test, win_length)
+            
+        # standardise before PCA    
+        x_train, scaler = normalise(x_train)
+        x_val = normalise(x_val, scaler)
+        x_test = normalise(x_test, scaler)
+        
+        if PCA:
+            x_train, pca = principal_component_analysis(x_train)
+            x_val = principal_component_analysis(x_val, pca)
+            x_test = principal_component_analysis(x_test, pca)
 
         # set regularisation penalty 
         if pen == 'l2':

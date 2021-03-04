@@ -7,6 +7,7 @@ Raw EEG signals contain noise that reduces the quality of extracted features and
 </span>
 
 ---
+---
 
 ### Time-Domain Filtering
 The main frequencies of the EEG signals change depending on the type of brain activity. Brain rhythms are frequency ranges corresponding to EEG signal frequencies exhibited during different types of activity. They are typically defined as delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), beta (13-30 Hz) and gamma (30-80 Hz). Broadly speaking, the lower frequency delta and theta bands correspond to sleep and relaxation states, whilst the higher frequency alpha, beta and gamma bands are exhibited during times of wakefullness. It would make sense therefore, to keep only the alpha, beta and gamma rhythms. It was found experimentally however that there is useful information at lower frequencies that improves predictions. 

@@ -1,4 +1,7 @@
-## Results
+---
+title: Results and Discussion
+---
+
 Summary of what has been being tested:
 - Single 0.5-80 Hz bandpass filter vs filter bank approach
 - No ICA vs eyeblink artifact removal with ICA

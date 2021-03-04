@@ -5,6 +5,8 @@ title: Grasp-and-Lift EEG Detection
 ### Task
 The aim of this work is to research how different signal processing and machine learning techniques and algorithm parameters impact the prediction of hand movements during a 'grasp-and-lift' (GAL) motion, using the recorded electroencephalogram (EEG) signals. Being able to accurately extract intent from raw EEG signals opens up many possibilities of developing healthcare technologies to improve the quality of life of amputees and those with neurological disorders. In the case of predicting the events of a GAL, the predictions could be fed to a robotic prosthesis, allowing for intuitive control for upper-limb amputees. 
 
+![BCI](images/BCI.png)
+
 ### Grasp-and-Lift
 The GAL is defined as 6 distinct events, taking place in the same order, as:
 1. HandStart - reach for small object

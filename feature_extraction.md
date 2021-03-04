@@ -2,7 +2,10 @@
 title: Feature Extraction
 ---
 
-Features are extracted from the EEG signals that aim to capture the important, event-discriminatory, information. This allows for reduction in the size of the data set without the loss of information, resulting in shorter training times and potentially better classification performance. 
+<span style="color:green"> Features are extracted from the EEG signals that aim to capture the important, event-discriminatory, information. This allows for reduction in the size of the data set without the loss of information, resulting in shorter training times and potentially better classification performance. </span>
+
+---
+---
 
 #### Epoching
 The signals are split into segments of data known as epochs, from which a set of features are extracted. A sliding window is used to pass through the data, extracting features as it goes. The length of the window, dictating how much previous information is useful for predictions, is an important parameter affecting classification performance. Window lengths of 0.25, 0.5, 1 and 2 seconds are tested, all with 50% overlap. The set of features extracted from a window take the events label of the final sample in that window.

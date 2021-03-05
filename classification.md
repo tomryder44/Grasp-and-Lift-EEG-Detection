@@ -2,10 +2,14 @@
 title: Classification
 ---
 
+<span style="color:green"> A classifier model is trained to predict the probability of each gesture being performed through time. A large number of different supervised learning algorithms exist, each with their own advantages. For this work, logistic regression is used owing to its short training time, allowing for a large number of algorithms to be evaluated. </span>
+
 ---
 ---
 
-Logistic regression, a binary classifier, is extended to multiclass and multilabel classification by constructing a *one-vs-rest* classifier, in which a logistic regression model is trained for each class, where the remaining 5 classes are considered the other class. For example, a model is trained to predict *HandStart* or *not HandStart*, and another is trained to predict *FirstDigitTouch* or *not FirstDigitTouch*. This is implemented in scikit-learn with the `OneVsRestClassifier` wrapper that contains the 6 models. 
+## Logistic Regression
+Logistic regression is a binary classifier, extended to multilabel classification by constructing a *one-vs-rest* classifier. For each class, a binary classification problem is defined and a model trained. For example, 
+one model is trained to predict the probability of HandStart, and another to predict FirstDigitTouch. Practically, this is implemented in scikit-learn with the `OneVsRestClassifier` wrapper that contains the 6 individual models. 
 
 ## Subject-Specific Models
 The characteristics of the EEG signals in both time and frequency domain vary between different subjects. Therefore, a classifier trained on one subject's features won't perform well on another subject's features. For this reason, a one-vs-rest classifier is trained for **each** subject, resulting in 12 classifiers per algorithm. On a side note, subject-independent models have been successful using deep-learning approaches, where using data from different subjects serves as a type of regularisation. For real-life use, this would have the advantage of reducing or foregoing a calibration period for a user. 

@@ -2,18 +2,18 @@
 title: Preprocessing
 ---
 
-<span style="color:green"> Raw EEG signals contain noise that reduces the quality of extracted features and in turn classification performance. The EEG signals are therefore processed in an attempt to maximise signal-to-noise ratio. </span>
+<span style="color:green"> Raw EEG signals are full of noise that can obscure or hide true brain activity in the signals, making the task of classification more difficult. The first step is therefore to process the raw EEG signals in an attempt to maximise signal-to-noise ratio. </span>
 
 ---
 ---
 
-## Time-Domain Filtering
-The main frequencies of the EEG signals change depending on the type of brain activity. Brain rhythms are frequency ranges corresponding to EEG signal frequencies exhibited during different types of activity. They are typically defined as delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), beta (13-30 Hz) and gamma (30-80 Hz). Broadly speaking, the lower frequency delta and theta bands correspond to sleep and relaxation states, whilst the higher frequency alpha, beta and gamma bands are exhibited during times of wakefullness. It would make sense therefore, to keep only the alpha, beta and gamma rhythms. It was found experimentally however that there is useful information at lower frequencies that improves predictions. 
-
-
-With the 500 Hz sampling frequency, the EEG signals contain frequencies up to 250 Hz. To keep only the frequencies within these defined rhythms, the EEG signals are bandpass filtered between 0.5-80 Hz. The EEG data of subject 1 channel 1, filtered into the different rhythms is shown below. 
+## Brain Rhythms
+The main frequencies of the EEG signals change depending on the type of brain activity. Brain rhythms are frequency ranges corresponding to EEG signal frequencies exhibited during different types of activity. They are typically defined as delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), beta (13-30 Hz) and gamma (30-80 Hz). Broadly speaking, the lower frequency delta and theta bands correspond to sleep and relaxation states, whilst the higher frequency alpha, beta and gamma bands are exhibited during times of wakefullness. The image below shows some raw EEG data filtered into the different rhythms.
 
 ![subject 1 channel 1 rhythms](images/subj1_rhythms.png) 
+
+## Time-Domain Filtering
+The first preprocessing step is therefore the remove frequencies outside the range of the brain rhythms, based on the assumption that the useful information is contained within these frequencies. This is performed by bandpass filtering the signals between 0.5-80 Hz. Interestingly, while it might make sense to keep only the alpha, beta and gamma rhythms, it was found experimentally there is useful information contained in the delta and theta bands.
 
 ### Filter Implementation
 The signals are filtered causally, i.e. using only present and past samples, to prevent data leakage from future samples. An inherent problem with causal filtering is that a time delay is introduced to the filtered signals (see filter_testing.ipynb for an example). This is an issue for supervised learning where each sample has a corresponding label at the same time. For minimal time delay, IIR filters are used to filter the EEG signals, despite the non-linear phase causing some distortion of the signal within the passband frequencies. The filter coefficients for 4th order Butterworth filters are obtained using he SciPy `butter` functon and the signals causally filtered using `lfilter`.

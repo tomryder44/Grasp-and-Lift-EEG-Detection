@@ -2,21 +2,19 @@
 title: Results
 ---
 
-
+<span style="color:green"> This page contains the results for each algorithm tested. All three metrics - training time, number of features and the AUROC score are averaged across all subjects. As this is an ongoing project, this page will be updated as different techniques are tried. </span>
 
 ---
 ---
 
-Summary of what has been being tested:
+**Total number of different algorithms: 64**
+
+Tested so far: 
 - Single 0.5-80 Hz bandpass filter vs filter bank approach
 - No ICA vs eyeblink artifact removal with ICA
 - Feature extraction window length - 0.25, 0.5, 1 and 2 seconds
 - No PCA vs PCA for dimensionality reduction
 - L1 vs L2 penalties in logistic regression
-
-**64 algorithms tested in total**
-
-Note that all three metrics - training time, number of features and the AUROC score are all averaged across all subjects. 
 
 | ICA   | Filter      |   Window length | PCA   | Penalty   |   Train time |   No. feats |   AUROC |
 |-------|-------------|-----------------|-------|-----------|--------------|-------------|---------|

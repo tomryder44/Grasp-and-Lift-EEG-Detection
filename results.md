@@ -16,7 +16,7 @@ Tested so far:
 - No PCA vs PCA for dimensionality reduction
 - L1 vs L2 penalties in logistic regression
 
-| ICA   | Filter      |   Window length | PCA   | Penalty   |   Train time |   No. feats |   AUROC |
+| ICA   | Filter      |   Window length (s) | PCA   | Penalty   |   Train time (s) |   No. feats |   AUROC |
 |-------|-------------|-----------------|-------|-----------|--------------|-------------|---------|
 | False | bandpass    |            0.5  | False | l2        |        8.048 |     291     |   0.798 |
 | False | bandpass    |            0.25 | False | l2        |       18.447 |     291     |   0.788 |

@@ -4,6 +4,8 @@ title: Preprocessing
 
 <span style="color:green"> Raw EEG signals are full of noise that can obscure or hide true brain activity in the signals, making the task of classification more difficult. The first step is therefore to process the raw EEG signals in an attempt to maximise signal-to-noise ratio. </span>
 
+![preprocessing figure](images/preprocessing.png)
+
 ---
 ---
 

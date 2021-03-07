@@ -4,6 +4,8 @@ title: Feature Extraction
 
 <span style="color:green"> Features are extracted from the EEG signals that aim to capture the important, event-discriminatory, information. This allows for reduction in the size of the data set without the loss of information, resulting in shorter training times and potentially better classification performance. </span>
 
+![feature extraction figure](images/feat_extract.png)
+
 ---
 ---
 

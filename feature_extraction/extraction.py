@@ -30,7 +30,7 @@ def compute_features(x):
     #x_cov = covmat(x)
     
     # frequency domain features
-    freqs, psd = welch(x, window='hann', axis=0, nperseg=len(x)/2)
+    freqs, psd = welch(x, fs=500/3, window='hann', axis=0, nperseg=len(x)/2)
     psd_max = feature_max(psd)
     psd_pf = feature_peak_freq(psd, freqs)
     psd_q1_mean = np.mean(psd[0:round(len(psd)/4),:], axis=0).reshape(1,-1)

@@ -4,6 +4,8 @@ title: Classification
 
 <span style="color:green"> A classifier model is trained to predict the probability of each gesture being performed through time. A large number of different supervised learning algorithms exist, each with their own advantages. For this work, logistic regression is used owing to its short training time, allowing for a large number of algorithms to be evaluated. </span>
 
+![classification figure](images/classification_fig.png)
+
 ---
 ---
 

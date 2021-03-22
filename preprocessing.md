@@ -42,7 +42,20 @@ Using a guide such as https://labeling.ucsd.edu/tutorial/labels , any artifacts 
 
 ![subj1_w_eyeblink](images/subj1_eyeblink.png)
 
+### Real-Time ICA
+Because the distribution of the data changes over time, IC's should also be recomputed over time. As per [1], the number of samples for ICA should be kn² where k ≥ 20 and n is the number of channels. To reduce computational cost, the number of channels are reduced from 32 to 22, keeping the channels shown below, as selected in [2]. For k=20 and n=22, we require 9680 samples, almost a minute of data. 
+
+![channels](images/selected_channels.png)
+
+### Artifact classification
+
 ## Filter Bank
 The use of a filter bank is investigated. The EEG signals are passed through five bandpass filters with cutoff frequencies corresponding to the brain rhythms defined above, and concatenated column-wise. This increases dimensionality of the data from 32 channels to 160. The idea behind using a filter bank like this is that because features are extracted from specific rhythms rather than the entire frequency spectrum, there is more discriminatory information about the different events available.  
 
 ![filter_bank_fig](images/filter_bank.png)
+
+## References
+
+[1] J. Onton, M. Westerfield, J. Townsend, and S. Makeig, “Imaging human EEG dynamics using independent component analysis” Neuroscience and Biobehavioral Reviews, vol.30, no.6, pp.808–822, 2006.
+
+[2] A. Mayeli, V. Zotev, H. Refai, and J. Bodurka, “Real-time EEG artifact correction during fMRI using ICA” Journal of Neuroscience Methods, vol. 274, pp. 27–37, 12 2016.

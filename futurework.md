@@ -9,11 +9,12 @@ title: Future Work
 
 ### General to-do
   - Use best algorithm on Kaggle test set and upload 
-  - Algorithm comparison tool
+  - Algorithm comparison tool for website
 
-### Independent Component Analysis
-  - More extensive artifact removal 
-  - Automate the artifact identification process
+### Independent Component Analysis - current focus
+  - The current ICA approach has been to compute the unmixing matrix on the train data, and use that to transform the test data and remove the same source channels that were removed following manual inspection of training data sources. However, the distribution of data changes over time and so ICs should be computed over time, thus requiring a more suitable real-time approach. This involves two main steps:
+    - Write the real-time algorithm
+    - Train a classifier / some classifiers for automated artifact detection
 
 ### Feature Extraction
   - Time-frequency domain features 

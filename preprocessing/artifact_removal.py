@@ -1,43 +1,49 @@
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import FastICA
-import matplotlib.pyplot as plt
-import ast
+from scipy.stats import kurtosis
+from feature_extraction.features import hjorth_complexity
 
-# have an alert when ica ready to be inspected
-import winsound
-duration = 1000  # milliseconds
-freq = 440  # Hz
-
-def independent_component_analysis(x, ica=None, col=None):
-    ''' Perform independent component analysis on x. On training data, ICA
-    is fit, independent sources checked for artifact channels, and then removed. 
-    On test data, data is transformed with fitted ICA and same channels removed. '''    
-    if ica:
-        if col:
-            independent_sources = ica.transform(x)
-            independent_sources[:, col] = 0
-            x_clean = ica.inverse_transform(independent_sources)
-            return x_clean
-        else:
-            return x
-
+def detect_blink_peak(x):
+    max_val = np.max(np.absolute(x))
+    if max_val >= 0.01:
+        return True
     else:
-        ica = FastICA().fit(x)
-        independent_sources = ica.transform(x)
-        # plot channels for manual inspection
-        independent_sources_df = pd.DataFrame(data=independent_sources)
-        independent_sources_df.iloc[1000:3000,:].plot(subplots=True, figsize=(40,40))
-        plt.show()
-        independent_sources_df.iloc[1000:1500,:].plot(subplots=True, figsize=(40,40))
-        plt.show()
-        # get input for channels to delete
-        winsound.Beep(freq, duration) # alert!
-        col_str = input('Remove component: ')
-        if col_str:
-            col = ast.literal_eval(col_str)
-            independent_sources[:, col] = 0
-            x_clean = ica.inverse_transform(independent_sources)
-            return x_clean, ica, col
-        else:
-            return x, ica, col_str
+        return False
+    
+def remove_blinks(x):
+    ica = FastICA(tol=0.1, max_iter=500).fit(x)
+    x_ica = ica.transform(x) # applies unmixing matrix to x
+    win_length = 200
+    fs = 500/3
+    for i, col in enumerate(x_ica.T): # iterate columns
+        num_blinks = 0
+        
+        for j in range(0, len(col)-win_length, win_length):
+            window = col[j:j+win_length] # window through signal
+            is_blink = detect_blink_peak(window) # detect blink in window
+        
+            # count number of blinks
+            if is_blink:
+                num_blinks += 1
+        
+        # compute kurtosis of whole signal
+        kur = kurtosis(col)
+        
+        # compute hjorth complexity
+        comp = hjorth_complexity(col)[0][0]
+        
+        # blink artifact source decision rule
+        if num_blinks >= len(x_ica)/(fs*20) and kur > 5 and comp > 3:
+            x_ica[:, i] = 0
+    
+    # apply inverse transformation
+    x_clean = ica.inverse_transform(x_ica)
+    
+    return x_clean
+
+        
+    
+        
+    
+    

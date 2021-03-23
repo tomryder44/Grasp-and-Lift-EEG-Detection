@@ -50,34 +50,21 @@ def feature_space(x, y, win_length_s, overlap=0.5):
     
     fs = 500/3
     win_length_samples = int(win_length_s*fs)
-    start = win_length_samples-1
-    
-    if overlap < 1:
-        step = int(win_length_samples-(overlap*win_length_samples))
-    else:
-        step = overlap
+    step = int(win_length_samples-(overlap*win_length_samples))
     
     feature_rows = [] 
     window_labels = [] # label for each feature
     
-    for i in range(start, len(x), step):
-        
-        if y is not None: # todo - for test data with no y
-            window_labels.append(y[i,:]) # label given as label of last sample in window
+    for i in range(0, len(x)-win_length_samples, step):
+        # label given as label of last sample in window
+        window_labels.append(y[i+win_length_samples,:]) 
         
         # get window of data and extract features
-        x_window = x[i-(win_length_samples-1):i+1, :]
+        x_window = x[i:i+win_length_samples, :]
         feature_rows.append(compute_features(x_window))
             
     x_fe = np.vstack(feature_rows)
-    
-    if y is not None:
-        y_fe = np.vstack(window_labels)
-        return x_fe, y_fe
-    
-    else:
-        return x_fe
+    y_fe = np.vstack(window_labels)
         
-
-
+    return x_fe, y_fe
     

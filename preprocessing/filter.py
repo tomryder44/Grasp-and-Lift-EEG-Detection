@@ -2,9 +2,9 @@
 import numpy as np
 from scipy.signal import lfilter, butter
 
-def downsample(x, n=3, start=0):
+def downsample(x, n=3):
     ''' Downsamples the signals in x by taking every nth sample. '''
-    return x[start::n, :]
+    return x[::n, :]
 
 def causal_filt(x, cutoffs, fs=500, btype='bandpass'):
     ''' Applies a causal IIR filter to x. '''

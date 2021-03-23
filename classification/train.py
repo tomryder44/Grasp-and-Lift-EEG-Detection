@@ -2,6 +2,8 @@
 import numpy as np
 from sklearn.metrics import roc_auc_score
 import time
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
   
 def grid_search(x_train, x_val, y_train, y_val, model, grid):
     ''' Performs a grid search to find optimal value of C for logistic regression.
@@ -26,9 +28,18 @@ def grid_search(x_train, x_val, y_train, y_val, model, grid):
     return best_C
     
          
-def optimise_model(x_train, x_val, y_train, y_val, model, grid):
+def optimise_model(x_train, x_val, y_train, y_val, penalty, grid):
     ''' Optimise model with a grid search, using hold out set for validation,
     and evaluating with AUROC. '''
+    
+    if penalty == 'l2':
+            model = OneVsRestClassifier(LogisticRegression(max_iter=2000))  
+        
+    elif penalty == 'l1':
+            model = OneVsRestClassifier(LogisticRegression(max_iter=2000,
+                                                           penalty='l1',
+                                                           solver='saga',
+                                                           tol=0.01)) # keeps training time down
     
     # perform grid search
     best_C = grid_search(x_train, x_val, y_train, y_val, model, grid)

@@ -32,24 +32,28 @@ To best classify EEG signals, the artifacts should be removed, leaving only the 
 Bandpass filtering the signals removes artifacts outside the 0.5-80 Hz range. This includes DC offset, very low frequency artifacts such as breathing, and EMG signals above 80 Hz. As shown in filter_testing.ipynb, mains interference at 50 Hz has already been removed.
 
 ### Independent Component Analysis
-Another artifact removal technique is necessary to remove those present in the 0.5-80 Hz range. Independent component analysis (ICA) is one such technique commonly used to remove artifacts from EEG signals. ICA decomposes the 32 channels of EEG data into 32 maximally independent signals/sources, which can isolate artifacts hidden in the EEG data, allowing for their removal. 
-
-ICA is implemented with the `FastICA` algorithm in scikit-learn. For each subject, an unmixing matrix is computed to transform the EEG signals into the independent sources. The sources are not ordered in any way, so identification of artifacts requires manual (or automated) inspection. In this work, the sources are presented in runtime, for example the sources of subject 1 are:
+Another artifact removal technique is necessary to remove those present in the 0.5-80 Hz range. Independent component analysis (ICA) is a blind source separation technique commonly used to remove artifacts from EEG signals. ICA computes an unmixing matrix that decomposes the channels of EEG data into maximally independent sources, which can isolate artifacts hidden in the EEG data, allowing for their removal. ICA is implemented with the `FastICA` algorithm in scikit-learn. The independent sources of subject 1's EEG data using ICA are shown: 
 
 ![subj1_ica](images/subj1_ica.png)
 
-Using a guide such as https://labeling.ucsd.edu/tutorial/labels , any artifacts can be identified. For example, eyeblink artifacts can be seen in the source 4th from the bottom, with their distinctive large peaks. To reject these eyeblinks, the 28th channel of independent sources is set to zero. When the inverse transformation is applied back to the mixed EEG signals, the eyeblinks are removed, as shown below:
+#### Artifact Detection
+The independent sources are not ordered in any way, so identification of artifacts requires manual or automated detection. For real-time purposes, detection of artifacts needs to be automated. So far, automated removal of blinking artifacts has been explored. Blink artifacts can be seen above, in the source 4th from the bottom, with their distinctive large peaks. A thresholding algorithm is used to detect the blink channel, based on the following properties:
+1. **Amplitude** - blinks are high amplitude signals, thus a simple count of the number of times peaks in the signal exceeds a defined threshold is made.  
+2. **Kurtosis** - kurtosis describes the peakedness of a signal; a signal with more large peaks relative to RMS of the signal will have a larger kurtosis. Blink artifacts have a high kurtosis. 
+3. **Hjorth complexity** - Some non-blink signals could still display the above properties. I found blink artifacts consistently have a greater Hjorth complexity than other sources. 
+
+Thresholds were found experimentally and all three properties must be satisfied to be defined as the blink source. Once found, the blink source is set to zero, and the inverse transformation is applied. Below shows the effect of removing blink artifacts from EEG data:
 
 ![subj1_w_eyeblink](images/subj1_eyeblink.png)
 
-### Real-Time ICA
-** Work in progress **
-Because the distribution of the data changes over time, IC's should also be recomputed over time. As per [1], the number of samples for ICA should be kn² where k ≥ 20 and n is the number of channels. To reduce computational cost, the number of channels are reduced from 32 to 22, keeping the channels shown below, as selected in [2]. For k=20 and n=22, we require 9680 samples, almost a minute of data. 
+#### Real-Time ICA
+Because the distribution of the EEG data changes over time, the unmixing matrix should also be recomputed over time. As per [1], found empirically, the number of samples for ICA should be at least kn² where k ≥ 20 and n is the number of channels. To reduce computational cost, the number of channels are reduced from 32 to 22, keeping the channels shown below, as selected in [2]. 
 
 ![channels](images/selected_channels.png)
 
-### Artifact detection
-** Work in progress **
+For k=20 and n=22, we require 9680 samples (rounded to 10000) for ICA. For making the predictions, real-time use is simulated i.e. windows of data are processed and a prediction made. To meet the sample requirements for ICA, predictions do not start until 10000 samples and the unmixing matrix is computed on the current window and the 10000 samples prior. Blink artifacts are then removed, and the cleaned window data returned. The algorithm is shown below from [2]. 
+
+![real-time ICA](images/realtimeica.jpg)
 
 ## Filter Bank
 The use of a filter bank is investigated. The EEG signals are passed through five bandpass filters with cutoff frequencies corresponding to the brain rhythms defined above, and concatenated column-wise. This increases dimensionality of the data from 32 channels to 160. The idea behind using a filter bank like this is that because features are extracted from specific rhythms rather than the entire frequency spectrum, there is more discriminatory information about the different events available.  

@@ -83,7 +83,7 @@ Below shows the ROC curve for the best algorithm for subjects 1 and 2.
 ![subj2_roc](images/subj2_roc.png)
 
 ### Artifact removal 
-Using ICA for artifact removal lowers the AUROC across all algorithms. For these results, only eyeblink artifacts were removed to prevent artifact misidentification and loss of useful information. One possible explanation is that the activity in the independent source containing blink artifacts contains useful, event-discriminant information. The artifacts are removed by setting the source to zero, but perhaps a thresholding technique is required to just remove the large spikes. 
+Using ICA for artifact removal lowers the AUROC across all algorithms. For these results, only eyeblink artifacts were removed to prevent artifact misidentification and loss of useful information. One possible explanation is that the activity in the independent source containing blink artifacts contains useful, event-discriminant information.
 
 ### Signal filtering
 Filtering the signals into the seperate brain rhythms improves performance for the longer windows of 1 and 2 seconds, but not for the windows of 0.25 and 0.5 seconds. One potential explanation for this is that the quality of the PSD estimate improves with longer windows, resulting in more useful features.

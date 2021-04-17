@@ -11,11 +11,10 @@ def detect_blink_peak(x):
     else:
         return False
     
-def remove_blinks(x):
+def remove_blinks(x, fs=500/3):
     ica = FastICA(tol=0.1, max_iter=500).fit(x)
     x_ica = ica.transform(x) # applies unmixing matrix to x
     win_length = 200
-    fs = 500/3
     for i, col in enumerate(x_ica.T): # iterate columns
         num_blinks = 0
         
@@ -34,7 +33,7 @@ def remove_blinks(x):
         comp = hjorth_complexity(col)[0][0]
         
         # blink artifact source decision rule
-        if num_blinks >= len(x_ica)/(fs*20) and kur > 5 and comp > 3:
+        if num_blinks >= len(x_ica)/(fs*40) and kur > 5 and comp > 3:
             x_ica[:, i] = 0
     
     # apply inverse transformation

@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.signal import lfilter, butter
 
-def downsample(x, n=3):
+def downsample(x, n=8):
     ''' Downsamples the signals in x by taking every nth sample. '''
     return x[::n, :]
 
@@ -20,8 +20,8 @@ def filter_bank(x):
     theta = (4, 8)
     alpha = (8, 13)
     beta = (13, 30)
-    gamma = (30, 80) 
-    bank = (delta, theta, alpha, beta, gamma)
+    #gamma = (30, 80) 
+    bank = (delta, theta, alpha, beta)#, gamma)
     x_filtered = []
     for cutoffs in bank:
         cutoffs = [cutoffs[0], cutoffs[1]]
@@ -31,8 +31,8 @@ def filter_bank(x):
     x_filtered = np.concatenate(x_filtered, axis=1)
     return x_filtered
 
-def decimate(x):
+def decimate(x, n=8):
     ''' Decimate the signal by filtering and downsampling. '''
-    x = causal_filt(x, [0.5, 80])
-    x = downsample(x)
+    x = causal_filt(x, [0.5, 30])
+    x = downsample(x, n)
     return x

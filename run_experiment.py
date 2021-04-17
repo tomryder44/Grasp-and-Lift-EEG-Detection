@@ -18,8 +18,8 @@ from sklearn.metrics import roc_auc_score
 import json
 
 # set subjects, algorithms and grid in test
-subjects = range(9, 12) # (1, 13)
-algorithms = [9, 41] # (1, 65)
+subjects = range(1, 13)
+algorithms = range(1, 65)
 grid = np.logspace(-1.3, 1.3, 10)
 
 # algorithm results dataframe
@@ -128,7 +128,7 @@ for algorithm in algorithms:
         # downsample events
         y_test = downsample(y_test)
         
-        fs = 500/3
+        fs = 500/8
         win_length_samples = int(win_length*fs)
 
         # record predictions

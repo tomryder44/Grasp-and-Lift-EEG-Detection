@@ -1,3 +1,4 @@
 *.csv
 *.pyc
 kaggle_submission.py
+single_model

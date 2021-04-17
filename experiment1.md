@@ -1,5 +1,5 @@
 ---
-title: Results
+title: Experiment 1
 ---
 
 <span style="color:green"> For each algorithm, the area under the receiver operating characteristic curve is computed, averaged across all subjects and gestures. In addition, training time and number of features are presented. </span>
